@@ -85,6 +85,24 @@ Arcanoid::Arcanoid(QWidget* parent) {
   repaint();
 }
 
+Arcanoid::~Arcanoid() {
+  int i, j;
+  for (i = 0; i < columns; i++)
+    for (j = 0; j < rows; j++) {
+      if (briks[i][j] != NULL)
+        delete briks[i][j];
+    }
+  if (!balls.empty())
+    balls.clear();
+  if (!movingBricks.empty())
+    movingBricks.clear();
+  if (!bonuses.empty())
+    bonuses.clear();
+  if (!dno.empty())
+    dno.clear();
+  delete paddle;
+}
+
 void Arcanoid::timerEvent(QTimerEvent* e) {
 
   Q_UNUSED(e);
@@ -349,37 +367,6 @@ void Arcanoid::encounter(Ball* a, Ball* b) {
       b->goUp();
     }
   }
-}
-
-int Ball::distanseX(Ball* b) {
-  return abs(this->x - b->x);
-}
-
-int Ball::distanseY(Ball* b) {
-  return abs(this->y - b->x);
-}
-
-void Ball::swapSpeed(Ball* b) {
-    Ball* a = this;
-    int tx, ty;
-    tx = a->dx;
-    ty = a->dy;
-    a->dx = b->dx;
-    a->dy = b->dy;
-    b->dx = tx;
-    b->dy = ty;
-}
-
-void Ball::split(Ball* b) {
-  Ball* a = this;
-  if (b->x < a->x)
-    a->x = b->x + d;
-  else
-    b->x = a->x + d;
-  if (b->y < a->y)
-    a->y = b->y + d;
-  else
-    b->y = a->y + d;
 }
 
 void Arcanoid::checkBrick(MovingBrick* brick) {

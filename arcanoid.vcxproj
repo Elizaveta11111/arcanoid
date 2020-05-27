@@ -82,11 +82,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="paddle.cpp" />
+    <ClInclude Include="ball.h" />
+    <ClInclude Include="bonus.h" />
     <ClInclude Include="brick.h" />
+    <ClInclude Include="paddle.h" />
     <QtRcc Include="arcanoid.qrc" />
     <QtUic Include="arcanoid.ui" />
     <ClInclude Include="arcanoid.h" />
     <ClCompile Include="arcanoid.cpp" />
+    <ClCompile Include="ball.cpp" />
+    <ClCompile Include="brick.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

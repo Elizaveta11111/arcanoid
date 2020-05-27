@@ -1,149 +1,20 @@
 #pragma once
 
 #include <QtWidgets/QMainWindow>
-#include <QPainter>
 #include <QKeyEvent>
 #include "ui_arcanoid.h"
 #include <vector>
 #include "brick.h"
+#include "ball.h"
+#include "paddle.h"
 
 const int rows = 8;
 const int columns = 6;
 
-
-class Ball {
-public:
-  Ball(int xPos, int yPos, int diametr) {
-    x = xPos;
-    y = yPos;
-    dx = 1;
-    dy = -1;
-    d = diametr;
-    speed = 1;
-  }
-  Ball(const Ball& ball) {
-    x = ball.x;
-    y = ball.y;
-    dx = -ball.dx;
-    dy = -ball.dy;
-    d = ball.d;
-    speed = 1;
-  }
-  void move() {
-    x += dx * speed;
-    y += dy * speed;
-  }
-  void speedUp() {
-    speed++;
-  }
-  void draw(QPainter* qp) {
-    qp->setBrush(QColor("#FF4500"));
-    qp->drawEllipse(x, y, d, d);
-  }
-  void changeXdir() {
-    dx = -dx;
-  }
-  void changeYdir() {
-    dy = -dy;
-  }
-  void moveRight() {
-    dx = 1;
-  }
-  void moveLeft() {
-    dx = -1;
-  }
-  void goUp() {
-    dy = -1;
-  }
-  void setX(int X) {
-    x = X;
-  }
-  void setY(int Y) {
-    y = Y;
-  }
-  int top() {
-    return y;
-  }
-  int bottom() {
-    return y + d;
-  }
-  int left() {
-    return x;
-  }
-  int right() {
-    return x + d;
-  }
-  void swapSpeed(Ball* b);
-  void split(Ball* b);
-  int distanseX(Ball* b);
-  int distanseY(Ball* b);
-private :
-  int speed;
-  int d;
-  int x, y;
-  int dx, dy;
-};
-
-class Paddle {
-public:
-  Paddle(int xPos, int yPos, int width, int height, int right) {
-    x = xPos;
-    y = yPos;
-    w = width;
-    h = height;
-    maxRight = right;
-    dx = 0;
-  }
-  void changeSize(int sign) {
-    w += sign * shrinkTo;
-    x -= sign * shrinkTo / 2;
-    if (x < 0) {
-      x = 0;
-    }
-    if (x > maxRight - w)
-      x = maxRight - w;
-  }
-  void draw(QPainter* qp) {
-    qp->setBrush(QColor("#800000"));
-    qp->drawRect(x, y, w, h);
-  }
-  void moveRight() {
-    dx = 8;
-  }
-  void moveLeft() {
-    dx = -8;
-  }
-  int getDx() {
-    return dx;
-  }
-  void move() {
-    int s = x + dx;
-    if (s >= 0 && s <= maxRight - w)
-      x = s;
-  }
-  void dontMove() {
-    dx = 0;
-  }
-  int top() {
-    return y;
-  }
-  int left() {
-    return x;
-  }
-  int right() {
-    return x + w;
-  }
-private:
-  int const shrinkTo = 20;
-  int maxRight;
-  int x, y;
-  int w, h;
-  int dx;
-};
-
 class Arcanoid : public QWidget {
 public:
   Arcanoid(QWidget* parent = 0);
+  ~Arcanoid();
 protected:
   void paintEvent(QPaintEvent* event);
   void timerEvent(QTimerEvent*);
