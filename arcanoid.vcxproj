@@ -82,6 +82,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="brick.h" />
     <QtRcc Include="arcanoid.qrc" />
     <QtUic Include="arcanoid.ui" />
     <ClInclude Include="arcanoid.h" />

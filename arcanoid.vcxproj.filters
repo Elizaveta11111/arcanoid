@@ -43,5 +43,8 @@
     <ClInclude Include="arcanoid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="brick.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
