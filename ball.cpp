@@ -81,7 +81,7 @@ int Ball::distanseX(Ball* b) {
 }
 
 int Ball::distanseY(Ball* b) {
-  return abs(this->y - b->x);
+  return abs(this->y - b->y);
 }
 
 void Ball::swapSpeed(Ball* b) {
