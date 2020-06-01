@@ -14,6 +14,13 @@ const int columns = 6;
 class Arcanoid : public QWidget {
 public:
   Arcanoid(QWidget* parent = 0);
+  void CreateNewBall();
+  void CreateMovingBrick();
+  void BallSpeedUp();
+  void ShrinkPaddle();
+  void ExpandPaddle();
+  void AddLives();
+  void StickToPaddle();
   ~Arcanoid();
 protected:
   void paintEvent(QPaintEvent* event);

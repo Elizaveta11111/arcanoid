@@ -82,6 +82,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bonus.cpp" />
     <ClCompile Include="paddle.cpp" />
     <ClInclude Include="ball.h" />
     <ClInclude Include="bonus.h" />

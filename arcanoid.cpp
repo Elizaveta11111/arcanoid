@@ -253,42 +253,27 @@ void Arcanoid::dropBonus(int i, int j, Drop bonus, Ball* ball) {
     points--;
   else if (bonus == Drop::speed)
     ball->speedUp();
-  else 
-    bonuses.push_back(new Bonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+  else if (bonus == Drop::newball)
+    bonuses.push_back(new NewBallBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+  else if (bonus == Drop::brick)
+    bonuses.push_back(new BrickBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+  else if (bonus == Drop::dropSpeed)
+    bonuses.push_back(new SpeedBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+  else if (bonus == Drop::shrink)
+    bonuses.push_back(new ShrinkBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+  else if (bonus == Drop::expand)
+    bonuses.push_back(new ExpandBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+  else if (bonus == Drop::live)
+    bonuses.push_back(new LiveBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+  else if (bonus == Drop::stick)
+    bonuses.push_back(new StickBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
 }
 
 void Arcanoid::catchBonuses() {
   for (int i = 0; i < bonuses.size(); i++) {
     if ((bonuses[i]->bottom() >= paddle->top() && bonuses[i]->left() <= paddle->right() && 
                   bonuses[i]->right() >= paddle->left())) {
-      if (bonuses[i]->getType() == Drop::newball) 
-        balls.push_back(new Ball(*balls[0]));
-      if (bonuses[i]->getType() == Drop::brick) {
-        int x, y;
-        x = brickPos / columns;
-        if (x == 0)
-          x = 0;
-        else
-          x = width - brickw;
-        y = 4 + brickPos % columns;
-        movingBricks.push_back(new MovingBrick(x, y * brickh, brickw, brickh, brickPos));
-        brickPos++;
-      }
-      if (bonuses[i]->getType() == Drop::dropSpeed) {
-        balls[balls.size() - 1]->speedUp();
-      }
-      if (bonuses[i]->getType() == Drop::shrink) {
-        paddle->changeSize(-1);
-      }
-      if (bonuses[i]->getType() == Drop::expand) {
-        paddle->changeSize(1);
-      }
-      if (bonuses[i]->getType() == Drop::live) {
-        bonuslives++;
-      }
-      if (bonuses[i]->getType() == Drop::stick) {
-        stick++;
-      }
+      bonuses[i]->destroed(this);
       delete bonuses[i];
       bonuses.erase(bonuses.begin() + i--);
     }
@@ -397,4 +382,40 @@ bool Arcanoid::bricksTouched(Brick* a, Brick* b) {
   if (a == b)
     return false;
   return (a->right() >= b->left() && a->right() < b->right()) || (a->left() <= b->right() && a->left() >= b->left());
+}
+
+void Arcanoid::CreateNewBall() {
+  balls.push_back(new Ball(*balls[0]));
+}
+
+void Arcanoid::CreateMovingBrick() {
+  int x, y;
+  x = brickPos / columns;
+  if (x == 0)
+    x = 0;
+  else
+    x = width - brickw;
+  y = 4 + brickPos % columns;
+  movingBricks.push_back(new MovingBrick(x, y * brickh, brickw, brickh, brickPos));
+  brickPos++;
+}
+
+void Arcanoid::BallSpeedUp() {
+  balls[balls.size() - 1]->speedUp();
+}
+
+void Arcanoid::ShrinkPaddle() {
+  paddle->changeSize(-1);
+}
+
+void Arcanoid::ExpandPaddle() {
+  paddle->changeSize(1);
+}
+
+void Arcanoid::AddLives() {
+  bonuslives++;
+}
+
+void Arcanoid::StickToPaddle() {
+  stick++;
 }
