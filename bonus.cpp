@@ -1,5 +1,43 @@
 #include "bonus.h"
 #include "arcanoid.h"
+
+Bonus::Bonus(Drop Type, int X, int Y, QColor col) {
+  type = Type;
+  color = col;
+  type = Type;
+  x = X;
+  y = Y;
+}
+
+Drop Bonus::getType() {
+  return type;
+}
+
+void Bonus::draw(QPainter* qp) {
+  qp->setBrush(color);
+  qp->drawRect(x - w / 2, y, w, h);
+}
+
+void Bonus::move() {
+  y += dy;
+}
+
+int Bonus::top() {
+  return y;
+}
+
+int Bonus::bottom() {
+  return y + h;
+}
+
+int Bonus::left() {
+  return x;
+}
+
+int Bonus::right() {
+  return x + w;
+}
+
 void NewBallBonus::destroed(Arcanoid* a) {
   a->CreateNewBall();
 }

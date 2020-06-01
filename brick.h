@@ -1,15 +1,16 @@
 #pragma once
 #include "bonus.h"
+class Ball;
+class Arcanoid;
 
 class Brick {
 public:
   Brick(int Lives, int X, int Y, int W, int H);
   ~Brick() {}
-  void _draw(QPainter* qp);
   virtual void draw(QPainter* qp) = 0;
   void setBonus(Drop b);
-  Drop _loseLive();
-  virtual Drop loseLive();
+  Drop loseLive();
+  virtual Drop touchedBall(Ball* ball, Arcanoid* a);
   void changeColor();
   void setColor(QColor col);
   void setColor();
@@ -20,6 +21,8 @@ public:
   int bottom();
   int left();
   int right();
+protected:
+  void drawRect(QPainter* qp);
 private:
   int x, y;
   int w, h;
@@ -41,7 +44,7 @@ public:
   ~UnbreakableBrick() {}
   bool isAlive();
   void draw(QPainter* qp);
-  Drop loseLive();
+  Drop touchedBall(Ball* ball, Arcanoid* a);
 };
 
 class SpeedBrick : public Brick {
@@ -49,7 +52,7 @@ public:
   SpeedBrick(int lives, int x, int y, int w, int h);
   ~SpeedBrick() {}
   void draw(QPainter* qp);
-  Drop loseLive();
+  Drop touchedBall(Ball* ball, Arcanoid* a);
 };
 
 class MovingBrick : public Brick {

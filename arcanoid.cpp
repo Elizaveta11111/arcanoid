@@ -4,57 +4,103 @@
 
 void Arcanoid::paintEvent(QPaintEvent* event) {
   Q_UNUSED(event);
-  int i, j;
   char message[30];
   QPainter painter(this);
+  drawField(&painter);
+  setMessage(message, sizeof(message));
+  writeMessage(message, sizeof(message), &painter);
+}
+
+void  Arcanoid::setMessage(char* message, int size) {
   if (lives == 0) {
-    snprintf(message, sizeof(message), "fail");
+    snprintf(message, size, "fail");
     killTimer(timerId);
   }
-  else if(briksleft == 0) {
-    snprintf(message, sizeof(message), "win");
+  else if (briksleft == 0) {
+    snprintf(message, size, "win");
     killTimer(timerId);
   }
-  else 
-    snprintf(message, sizeof(message), "Points: %d\n Lives: %d", points, lives);
-  painter.setPen(QColor("#FF8C00"));
-  paddle->draw(&painter);
+  else
+    snprintf(message, size, "Points: %d Lives: %d", points, lives);
+}
+
+void Arcanoid::writeMessage(char* message, int size, QPainter* qp) {
+  QFont font("Courier", 15, QFont::DemiBold);
+  QFontMetrics fm(font);
+  qp->setFont(font);
+  int textWidth = fm.width(QString(message));
+  qp->translate(QPoint(textWidth, fm.height()));
+  qp->drawText(-textWidth, 0, message);
+}
+
+void Arcanoid::drawField(QPainter* qp) {
+  qp->setPen(QColor("#FF8C00"));
+  paddle->draw(qp);
+  drawBalls(qp);
+  drawBonuses(qp);
+  drawMovingBricks(qp);
+  drawBricks(qp);
+  drawDno(qp);
+  catchBonuses();
+}
+
+void Arcanoid::drawBalls(QPainter* qp) {
   if (!balls.empty())
-    for (i = 0; i < balls.size(); i++)
-      balls[i]->draw(&painter);
+    for (int i = 0; i < balls.size(); i++)
+      balls[i]->draw(qp);
+}
+
+void Arcanoid::drawBonuses(QPainter* qp) {
   if (!bonuses.empty())
-    for (i = 0; i < bonuses.size(); i++)
-      bonuses[i]->draw(&painter);
+    for (int i = 0; i < bonuses.size(); i++)
+      bonuses[i]->draw(qp);
+}
+
+void Arcanoid::drawMovingBricks (QPainter* qp) {
   if (!movingBricks.empty())
-    for (i = 0; i < movingBricks.size(); i++)
-      movingBricks[i]->draw(&painter);
+    for (int i = 0; i < movingBricks.size(); i++)
+      movingBricks[i]->draw(qp);
+}
+
+void Arcanoid::drawBricks(QPainter* qp) {
+  int i, j;
   for (i = 0; i < columns; i++)
     for (j = 0; j < rows; j++)
       if (briks[i][j] != NULL)
-        briks[i][j]->draw(&painter);
+        briks[i][j]->draw(qp);
+}
+
+void Arcanoid::drawDno(QPainter* qp) {
   if (!dno.empty()) {
     tick--;
-    for (i = 0; i < dno.size(); i++)
-      dno[i]->draw(&painter);
+    for (int i = 0; i < dno.size(); i++)
+      dno[i]->draw(qp);
     if (tick == 0) {
       dno.clear();
     }
   }
-  catchBonuses();
-  QFont font("Courier", 15, QFont::DemiBold);
-  QFontMetrics fm(font);
-  painter.setFont(font);
-  int textWidth = fm.width(QString(message));
-  painter.translate(QPoint(textWidth, fm.height()));
-  painter.drawText(-textWidth, 0, message);
 }
 
 Arcanoid::Arcanoid(QWidget* parent) {
-  int i, j;
   timerId = startTimer(8);
+  createBricks();
+  balls.push_back(new Ball(width / 2 - ballD/2, height - 46, ballD));
+  paddle = new Paddle(width / 2 - 60, height - 30, 120, 10, width);
+  stickball = balls[0];
+  brickPos = 0;
+  bonuslives = 0;
+  lives = 3;
+  points = 0;
+  stick = 1;
+  briksleft = columns * rows - 4;
+  repaint();
+}
+
+void Arcanoid::createBricks() {
+  int i, j;
   for (i = 0; i < columns; i++) {
     for (j = 0; j < 2; j++) {
-        briks[i][j] = new SimpleBrick(1, brickw * (2 + i), brickh * (4 + j), brickw, brickh);
+      briks[i][j] = new SimpleBrick(1, brickw * (2 + i), brickh * (4 + j), brickw, brickh);
     }
     for (j = 2; j < 4; j++) {
       if ((i == 5 || i == 0) && j == 2)
@@ -73,25 +119,10 @@ Arcanoid::Arcanoid(QWidget* parent) {
         briks[i][j] = new SimpleBrick(4, brickw * (2 + i), brickh * (4 + j), brickw, brickh);
     }
   }
-  balls.push_back(new Ball(width / 2 - ballD/2, height - 46, ballD));
-  paddle = new Paddle(width / 2 - 60, height - 30, 120, 10, width);
-  stickball = balls[0];
-  brickPos = 0;
-  bonuslives = 0;
-  lives = 3;
-  points = 0;
-  stick = 1;
-  briksleft = columns * rows - 4;
-  repaint();
 }
 
 Arcanoid::~Arcanoid() {
-  int i, j;
-  for (i = 0; i < columns; i++)
-    for (j = 0; j < rows; j++) {
-      if (briks[i][j] != NULL)
-        delete briks[i][j];
-    }
+  deleteBricks();
   if (!balls.empty())
     balls.clear();
   if (!movingBricks.empty())
@@ -103,19 +134,41 @@ Arcanoid::~Arcanoid() {
   delete paddle;
 }
 
+void Arcanoid::deleteBricks() {
+  int i, j;
+  for (i = 0; i < columns; i++)
+    for (j = 0; j < rows; j++) {
+      if (briks[i][j] != NULL)
+        delete briks[i][j];
+    }
+}
+
 void Arcanoid::timerEvent(QTimerEvent* e) {
 
   Q_UNUSED(e);
 
   paddle->move();
+  moveBonuses();
+  moveBricks();
+  moveBalls();
+  repaint();
+}
+
+void Arcanoid::moveBonuses() {
   if (!bonuses.empty())
     for (int i = 0; i < bonuses.size(); i++)
       bonuses[i]->move();
+}
+
+void Arcanoid::moveBricks() {
   if (!movingBricks.empty())
     for (int i = 0; i < movingBricks.size(); i++) {
       checkBrick(movingBricks[i]);
       movingBricks[i]->move();
     }
+}
+
+void Arcanoid::moveBalls() {
   if (!balls.empty()) {
     for (int i = 0; i < balls.size(); i++) {
       if (balls[i] == stickball)
@@ -126,7 +179,6 @@ void Arcanoid::timerEvent(QTimerEvent* e) {
     }
     checkEncounter();
   }
-  repaint();
 }
 
 void Arcanoid::checkEncounter() {
@@ -143,10 +195,34 @@ void Arcanoid::checkColisions(Ball* ball) {
 }
 
 void Arcanoid::touchedBox(Ball* ball) {
+  touchedTop(ball);
+  touchedLeft(ball);
+  touchedRight(ball);
+  touchedButtom(ball);
+}
+
+void Arcanoid::touchedTop(Ball* ball) {
   if (ball->top() <= 0) {
     ball->setY(0);
     ball->changeYdir();
   }
+}
+
+void Arcanoid::touchedLeft(Ball* ball) {
+  if ((ball->left() <= 0)) {
+    ball->setX(0);
+    ball->changeXdir();
+  }
+}
+
+void Arcanoid::touchedRight(Ball* ball) {
+  if (ball->right() >= width) {
+    ball->setX(width - ballD);
+    ball->changeXdir();
+  }
+}
+
+void Arcanoid::touchedButtom(Ball* ball) {
   if (ball->top() >= height) {
     int i;
     for (i = 0; i < balls.size(); i++)
@@ -163,58 +239,63 @@ void Arcanoid::touchedBox(Ball* ball) {
       }
     }
   }
-  if ((ball->left() <= 0)) {
-    ball->setX(0);
-    ball->changeXdir();
-  }
-  if (ball->right() >= width) {
-    ball->setX(width - ballD);
-    ball->changeXdir();
-  }
 }
 
 void Arcanoid::touchedPaddle(Ball* ball) {
   int r = paddle->right();
   int l = paddle->left();
   if (ball->bottom() >= paddle->top()) {
-    if (ball->left() >= l && ball->right() <= r) {
-      if (ball->right() <= l + (r - l) / 3)
-        ball->moveLeft();
-      else if (ball->left() >= r - (r - l) / 3)
-        ball->moveRight();
-      else
-        ball->changeXdir();
-      ball->setY(paddle->top() - ballD);
-      ball->changeYdir();
-      if (stick && stickball == NULL)
-        stickball = ball;
-    }
-    else if (bonuslives) {
-      tick = 10;
-      dno.push_back(new Paddle(ball->left(), paddle->top(), ballD, paddleh, width));
-      repaint();
-      ball->changeYdir();
-      bonuslives--;
-    }
+    if (ball->left() >= l && ball->right() <= r) 
+      bounce(ball, l, r);
+    else if (bonuslives)
+      bonusPaddle(ball);
   }
+}
+
+void Arcanoid::bounce(Ball* ball, int l, int r) { 
+  if (ball->right() <= l + (r - l) / 3)
+    ball->moveLeft();
+  else if (ball->left() >= r - (r - l) / 3)
+    ball->moveRight();
+  else
+    ball->changeXdir();
+  ball->setY(paddle->top() - ballD);
+  ball->changeYdir();
+  if (stick && stickball == NULL)
+    stickball = ball;
+}
+
+void Arcanoid::bonusPaddle(Ball* ball) {
+  tick = 10;
+  dno.push_back(new Paddle(ball->left(), paddle->top(), ballD, paddleh, width));
+  repaint();
+  ball->changeYdir();
+  bonuslives--;
 }
 
 void Arcanoid::touchedBricks(Ball* ball) {
   bool lrTouch = false;
   bool udTouch = false;
+  touchedStaticBricks(ball, &lrTouch, &udTouch);
+  touchedMovingBricks(ball, &lrTouch, &udTouch);
+  if (lrTouch)
+    ball->changeXdir();
+  else if (udTouch)
+    ball->changeYdir();
+}
+
+void Arcanoid::touchedStaticBricks(Ball* ball, bool* lrTouch, bool* udTouch) {
   int i, j;
   for (i = 0; i < columns; i++)
     for (j = 0; j < rows; j++) {
       if (briks[i][j] != NULL) {
         if (touchedLR(ball, briks[i][j])) {
-          dropBonus(i, j, briks[i][j]->loseLive(), ball);
-          points++;
-          lrTouch = true;
+          dropBonus(i, j, briks[i][j]->touchedBall(ball, this), ball);
+          *lrTouch = true;
         }
         else if (touchedUD(ball, briks[i][j])) {
-          dropBonus(i, j, briks[i][j]->loseLive(), ball);
-          points++;
-          udTouch = true;
+          dropBonus(i, j, briks[i][j]->touchedBall(ball, this), ball);
+          *udTouch = true;
         }
         if (!briks[i][j]->isAlive()) {
           briksleft--;
@@ -223,50 +304,53 @@ void Arcanoid::touchedBricks(Ball* ball) {
         }
       }
     }
+}
+
+void Arcanoid::touchedMovingBricks(Ball* ball, bool* lrTouch, bool* udTouch) {
+  int i, j;
   if (!movingBricks.empty())
     for (i = 0; i < movingBricks.size(); i++) {
       if (touchedLR(ball, movingBricks[i])) {
-        movingBricks[i]->loseLive();
-        points++;
-        lrTouch = true;
+        movingBricks[i]->touchedBall(ball, this);
+        *lrTouch = true;
       }
       else if (touchedUD(ball, movingBricks[i])) {
-        movingBricks[i]->loseLive();
-        points++;
-        udTouch = true;
+        movingBricks[i]->touchedBall(ball, this);
+        *udTouch = true;
       }
       if (!movingBricks[i]->isAlive()) {
         delete movingBricks[i];
         movingBricks.erase(movingBricks.begin() + i--);
       }
     }
-  if (lrTouch)
-    ball->changeXdir();
-  else if (udTouch)
-    ball->changeYdir();
 }
 
 void Arcanoid::dropBonus(int i, int j, Drop bonus, Ball* ball) {
-  if (bonus == Drop::nothing)
-    return;
-  else if (bonus == Drop::losepoints)
-    points--;
-  else if (bonus == Drop::speed)
-    ball->speedUp();
-  else if (bonus == Drop::newball)
+  switch (bonus) {
+  case Drop::newball:
     bonuses.push_back(new NewBallBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
-  else if (bonus == Drop::brick)
+    break;
+  case Drop::brick:
     bonuses.push_back(new BrickBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
-  else if (bonus == Drop::dropSpeed)
+    break;
+  case Drop::speed:
     bonuses.push_back(new SpeedBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
-  else if (bonus == Drop::shrink)
+    break;
+  case Drop::shrink:
     bonuses.push_back(new ShrinkBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
-  else if (bonus == Drop::expand)
+    break;
+  case Drop::expand:
     bonuses.push_back(new ExpandBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
-  else if (bonus == Drop::live)
+    break;
+  case Drop::live:
     bonuses.push_back(new LiveBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
-  else if (bonus == Drop::stick)
+    break;
+  case Drop::stick:
     bonuses.push_back(new StickBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+    break;
+  default:
+    break;
+  } 
 }
 
 void Arcanoid::catchBonuses() {
@@ -355,26 +439,41 @@ void Arcanoid::encounter(Ball* a, Ball* b) {
 }
 
 void Arcanoid::checkBrick(MovingBrick* brick) {
-  int i, j;
+  touchedLeft(brick);
+  touchedRight(brick);
+  touchedSimpleBrick(brick);
+  touchedMovingBrick(brick);
+}
+
+void Arcanoid::touchedMovingBrick(MovingBrick* brick) {
+  for (int i = 0; i < movingBricks.size(); i++) {
+    if (brick->getPos() % columns == movingBricks[i]->getPos() % columns)
+      if (bricksTouched(brick, movingBricks[i]))
+        brick->goBack();
+  }
+}
+
+void Arcanoid::touchedSimpleBrick(MovingBrick* brick) {
   int y = brick->getPos() % columns;
+  for (int i = 0; i < columns; i++) {
+    if (briks[i][y] != NULL) {
+      if (bricksTouched(brick, briks[i][y]))
+        brick->goBack();
+    }
+  }
+}
+
+void Arcanoid::touchedLeft(MovingBrick* brick) {
   if (brick->left() < 0) {
     brick->setX(0);
     brick->goBack();
   }
+}
+
+void Arcanoid::touchedRight(MovingBrick* brick) {
   if (brick->right() > width) {
     brick->setX(width - brickw);
     brick->goBack();
-  }
-  for (i = 0; i < columns; i++) {
-      if (briks[i][y] != NULL) {
-        if (bricksTouched(brick, briks[i][y]))
-          brick->goBack();
-      }
-  } 
-  for (int i = 0; i < movingBricks.size(); i++) {
-    if(brick->getPos() % columns == movingBricks[i]->getPos() % columns)
-      if (bricksTouched(brick, movingBricks[i]))
-        brick->goBack();
   }
 }
 
@@ -418,4 +517,8 @@ void Arcanoid::AddLives() {
 
 void Arcanoid::StickToPaddle() {
   stick++;
+}
+
+void Arcanoid::AddPoint() {
+  points++;
 }

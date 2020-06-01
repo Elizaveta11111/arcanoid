@@ -2,41 +2,20 @@
 #include <QPainter>
 class Arcanoid;
 
-enum class Drop { nothing, point, speed, newball, brick, dropSpeed, shrink, expand, live, stick, losepoints };
+enum class Drop { nothing, speed, newball, brick, shrink, expand, live, stick};
 
 class Bonus {
 public:
-  Bonus(Drop Type, int X, int Y, QColor col) {
-    type = Type;
-    color = col;
-    type = Type;
-    x = X;
-    y = Y;
-  }
+  Bonus(Drop Type, int X, int Y, QColor col);
   ~Bonus() {}
   virtual void destroed(Arcanoid* a) = 0;
-  Drop getType() {
-    return type;
-  }
-  void draw(QPainter* qp) {
-    qp->setBrush(color);
-    qp->drawRect(x - w / 2, y, w, h);
-  }
-  void move() {
-    y += dy;
-  }
-  int top() {
-    return y;
-  }
-  int bottom() {
-    return y + h;
-  }
-  int left() {
-    return x;
-  }
-  int right() {
-    return x + w;
-  }
+  Drop getType();
+  void draw(QPainter* qp);
+  void move();
+  int top();
+  int bottom();
+  int left();
+  int right();
 private:
   Drop type;
   QColor color;

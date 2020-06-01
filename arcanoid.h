@@ -21,6 +21,7 @@ public:
   void ExpandPaddle();
   void AddLives();
   void StickToPaddle();
+  void AddPoint();
   ~Arcanoid();
 protected:
   void paintEvent(QPaintEvent* event);
@@ -28,6 +29,31 @@ protected:
   void keyPressEvent(QKeyEvent*);
   void keyReleaseEvent(QKeyEvent*);
 private:
+  void setMessage(char* message, int size);
+  void writeMessage(char* message, int size, QPainter* qp);
+  void touchedStaticBricks(Ball* ball, bool* lrTouch, bool* udTouch);
+  void touchedMovingBricks(Ball* ball, bool* lrTouch, bool* udTouch);
+  void drawField(QPainter* qp);
+  void drawBalls(QPainter* qp);
+  void drawBonuses(QPainter* qp);
+  void drawMovingBricks(QPainter* qp);
+  void drawBricks(QPainter* qp);
+  void drawDno(QPainter* qp);
+  void createBricks();
+  void deleteBricks();
+  void moveBonuses();
+  void moveBricks();
+  void moveBalls();
+  void touchedTop(Ball* ball);
+  void touchedLeft(Ball* ball);
+  void touchedRight(Ball* ball);
+  void touchedButtom(Ball* ball);
+  void touchedLeft(MovingBrick* brick);
+  void touchedRight(MovingBrick* brick);
+  void touchedSimpleBrick(MovingBrick* brick);
+  void touchedMovingBrick(MovingBrick* brick);
+  void bounce(Ball* ball, int l, int r);
+  void bonusPaddle(Ball*);
   void catchBonuses();
   void dropBonus(int i, int j, Drop bonus, Ball* ball);
   Brick* briks[columns][rows];

@@ -1,4 +1,6 @@
 #include "brick.h"
+#include "ball.h"
+#include "arcanoid.h"
 
 Brick::Brick(int Lives, int X, int Y, int W, int H) {
   lives = Lives;
@@ -9,7 +11,7 @@ Brick::Brick(int Lives, int X, int Y, int W, int H) {
   bonus = Drop::nothing;
 }
 
-void Brick::_draw(QPainter* qp) {
+void Brick::drawRect(QPainter* qp) {
   qp->setBrush(color);
   qp->drawRect(x, y, w, h);
 }
@@ -18,7 +20,7 @@ void Brick::setBonus(Drop b) {
   bonus = b;
 }
 
-Drop Brick::_loseLive() {
+Drop Brick::loseLive() {
   Drop temp = bonus;
   bonus = Drop::nothing;
   lives--;
@@ -26,8 +28,9 @@ Drop Brick::_loseLive() {
   return temp;
 }
 
-Drop Brick::loseLive() {
-  return this->_loseLive();
+Drop Brick::touchedBall(Ball* ball, Arcanoid* a) {
+  a->AddPoint();
+  return this->loseLive();
 }
 
 void Brick::changeColor() {
@@ -95,7 +98,7 @@ SimpleBrick::SimpleBrick(int lives, int x, int y, int w, int h) : Brick(lives, x
     this->setBonus(Drop::newball);
     break;
   case 3:
-    this->setBonus(Drop::dropSpeed);
+    this->setBonus(Drop::speed);
     break;
   case 4:
     this->setBonus(Drop::expand);
@@ -108,7 +111,6 @@ SimpleBrick::SimpleBrick(int lives, int x, int y, int w, int h) : Brick(lives, x
     break;
   case 7:
     this->setBonus(Drop::stick);
-    //this->setColor(QColor("green"));
     break;
   default:
     this->setBonus(Drop::nothing);
@@ -118,12 +120,12 @@ SimpleBrick::SimpleBrick(int lives, int x, int y, int w, int h) : Brick(lives, x
 
 void SimpleBrick::draw(QPainter* qp) {
   qp->setPen(QColor("#FF8C00"));
-  this->_draw(qp);
+  this->drawRect(qp);
 }
 
 UnbreakableBrick::UnbreakableBrick(int lives, int x, int y, int w, int h) : Brick(lives, x, y, w, h) {
   this->setColor();
-  this->setBonus(Drop::losepoints);
+  this->setBonus(Drop::nothing);
 }
 
 bool UnbreakableBrick::isAlive() {
@@ -131,27 +133,28 @@ bool UnbreakableBrick::isAlive() {
 }
 
 void UnbreakableBrick::draw(QPainter* qp) {
-  this->_draw(qp);
+  this->drawRect(qp);
 }
 
-Drop UnbreakableBrick::loseLive() {
-  this->_loseLive();
-  return Drop::losepoints;
+Drop UnbreakableBrick::touchedBall(Ball* ball, Arcanoid* a) {
+  this->loseLive();
+  return Drop::nothing;
 }
 
 SpeedBrick::SpeedBrick(int lives, int x, int y, int w, int h) : Brick(lives, x, y, w, h) {
-  this->setBonus(Drop::speed);
+
 }
 
 void SpeedBrick::draw(QPainter* qp) {
   setColor(QColor("#FF1493"));
-  this->_draw(qp);
+  this->drawRect(qp);
 }
 
-Drop SpeedBrick::loseLive() {
-  this->_loseLive();
-  setBonus(Drop::speed);
-  return Drop::speed;
+Drop SpeedBrick::touchedBall(Ball* ball, Arcanoid* a) {
+  a->AddPoint();
+  ball->speedUp();
+  this->loseLive();
+  return Drop::nothing;
 }
 
 MovingBrick::MovingBrick(int x, int y, int w, int h, int Pos) : Brick(3, x, y, w, h) {
@@ -173,5 +176,5 @@ int MovingBrick::getPos() {
 }
 
 void MovingBrick::draw(QPainter* qp) {
-  this->_draw(qp);
+  this->drawRect(qp);
 }
