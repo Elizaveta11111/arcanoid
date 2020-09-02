@@ -86,6 +86,7 @@ Arcanoid::Arcanoid(QWidget* parent) {
   createBricks();
   balls.push_back(new Ball(width / 2 - ballD/2, height - 46, ballD));
   paddle = new Paddle(width / 2 - 60, height - 30, 120, 10, width);
+  touched = new Touching();
   stickball = balls[0];
   brickPos = 0;
   bonuslives = 0;
@@ -122,15 +123,28 @@ void Arcanoid::createBricks() {
 }
 
 Arcanoid::~Arcanoid() {
+  int i;
   deleteBricks();
-  if (!balls.empty())
+  if (!balls.empty()) {
+    for (i = 0; i < balls.size(); i++)
+      delete balls[i] ;
     balls.clear();
-  if (!movingBricks.empty())
+  }
+  if (!movingBricks.empty()) {
+    for (i = 0; i < movingBricks.size(); i++)
+      delete movingBricks[i];
     movingBricks.clear();
-  if (!bonuses.empty())
+  }
+  if (!bonuses.empty()) {
+    for (i = 0; i < bonuses.size(); i++)
+      delete bonuses[i];
     bonuses.clear();
-  if (!dno.empty())
+  }
+  if (!dno.empty()) {
+    for (i = 0; i < dno.size(); i++)
+      delete dno[i];
     dno.clear();
+  }
   delete paddle;
 }
 
@@ -183,86 +197,15 @@ void Arcanoid::moveBalls() {
 
 void Arcanoid::checkEncounter() {
   int i, j;
-  for (i = 0; i < balls.size() - 1; i++)
-    for (j = i + 1; j < balls.size(); j++)
-      encounter(balls[i], balls[j]);
+  for (i = 0; i < (int)balls.size() - 1; i++)
+    for (j = i + 1; j < (int)balls.size(); j++)
+      touched->encounter(balls[i], balls[j], this);
 }
 
 void Arcanoid::checkColisions(Ball* ball) {
-  touchedBox(ball);
-  touchedPaddle(ball);
-  touchedBricks(ball);
-}
-
-void Arcanoid::touchedBox(Ball* ball) {
-  touchedTop(ball);
-  touchedLeft(ball);
-  touchedRight(ball);
-  touchedButtom(ball);
-}
-
-void Arcanoid::touchedTop(Ball* ball) {
-  if (ball->top() <= 0) {
-    ball->setY(0);
-    ball->changeYdir();
-  }
-}
-
-void Arcanoid::touchedLeft(Ball* ball) {
-  if ((ball->left() <= 0)) {
-    ball->setX(0);
-    ball->changeXdir();
-  }
-}
-
-void Arcanoid::touchedRight(Ball* ball) {
-  if (ball->right() >= width) {
-    ball->setX(width - ballD);
-    ball->changeXdir();
-  }
-}
-
-void Arcanoid::touchedButtom(Ball* ball) {
-  if (ball->top() >= height) {
-    int i;
-    for (i = 0; i < balls.size(); i++)
-      if (balls[i] == ball)
-        break;
-    delete ball;
-    balls.erase(balls.begin() + i);
-    if (balls.empty()) {
-      lives--;
-      if (lives > 0) {
-        balls.push_back(new Ball(paddle->left() + (paddle->right() - paddle->left()) / 2 - ballD / 2, paddle->top() - ballD, ballD));
-        stick = 1;
-        stickball = balls[balls.size() - 1];
-      }
-    }
-  }
-}
-
-void Arcanoid::touchedPaddle(Ball* ball) {
-  int r = paddle->right();
-  int l = paddle->left();
-  if (ball->bottom() >= paddle->top()) {
-    if (ball->left() >= l && ball->right() <= r) 
-      bounce(ball, l, r);
-    else if (bonuslives)
-      bonusPaddle(ball);
-  }
-}
-
-void Arcanoid::bounce(Ball* ball, int l, int r) { 
-  if (ball->right() <= l + (r - l) / 3)
-    ball->moveLeft();
-  else if (ball->left() >= r - (r - l) / 3)
-    ball->moveRight();
-  else
-    ball->changeXdir();
-  ball->setY(paddle->top() - ballD);
-  ball->changeYdir();
-  if (stick && stickball == NULL)
-    stickball = ball;
+  touched->touchedBox(ball, this);
+  touched->touchedPaddle(ball, paddle, this);
+  touched->touchedBricks(ball, this);
 }
 
 void Arcanoid::bonusPaddle(Ball* ball) {
@@ -271,58 +214,6 @@ void Arcanoid::bonusPaddle(Ball* ball) {
   repaint();
   ball->changeYdir();
   bonuslives--;
-}
-
-void Arcanoid::touchedBricks(Ball* ball) {
-  bool lrTouch = false;
-  bool udTouch = false;
-  touchedStaticBricks(ball, &lrTouch, &udTouch);
-  touchedMovingBricks(ball, &lrTouch, &udTouch);
-  if (lrTouch)
-    ball->changeXdir();
-  else if (udTouch)
-    ball->changeYdir();
-}
-
-void Arcanoid::touchedStaticBricks(Ball* ball, bool* lrTouch, bool* udTouch) {
-  int i, j;
-  for (i = 0; i < columns; i++)
-    for (j = 0; j < rows; j++) {
-      if (briks[i][j] != NULL) {
-        if (touchedLR(ball, briks[i][j])) {
-          dropBonus(i, j, briks[i][j]->touchedBall(ball, this), ball);
-          *lrTouch = true;
-        }
-        else if (touchedUD(ball, briks[i][j])) {
-          dropBonus(i, j, briks[i][j]->touchedBall(ball, this), ball);
-          *udTouch = true;
-        }
-        if (!briks[i][j]->isAlive()) {
-          briksleft--;
-          delete briks[i][j];
-          briks[i][j] = NULL;
-        }
-      }
-    }
-}
-
-void Arcanoid::touchedMovingBricks(Ball* ball, bool* lrTouch, bool* udTouch) {
-  int i, j;
-  if (!movingBricks.empty())
-    for (i = 0; i < movingBricks.size(); i++) {
-      if (touchedLR(ball, movingBricks[i])) {
-        movingBricks[i]->touchedBall(ball, this);
-        *lrTouch = true;
-      }
-      else if (touchedUD(ball, movingBricks[i])) {
-        movingBricks[i]->touchedBall(ball, this);
-        *udTouch = true;
-      }
-      if (!movingBricks[i]->isAlive()) {
-        delete movingBricks[i];
-        movingBricks.erase(movingBricks.begin() + i--);
-      }
-    }
 }
 
 void Arcanoid::dropBonus(int i, int j, Drop bonus, Ball* ball) {
@@ -368,34 +259,6 @@ void Arcanoid::catchBonuses() {
   }
 }
 
-bool Arcanoid::touchedLR(Ball* ball, Brick* brick) {
-  if (ball->bottom() >= brick->top() && ball->top() <= brick->bottom()) {
-    if (ball->left() <= brick->right() && ball->right() >= brick->right()) {
-      ball->setX(brick->right());
-      return true;
-    }
-    else if (ball->right() >= brick->left() && ball->left() <= brick->left()) {
-      ball->setX(brick->left() - ballD);
-      return true;
-    }
-  }
-  return false;
-}
-
-bool Arcanoid::touchedUD(Ball* ball, Brick* brick) {
-  if (ball->left() <= brick->right() && ball->right() >= brick->left()) {
-    if (ball->top() <= brick->bottom() && ball->bottom() >= brick->bottom()) {
-      ball->setY(brick->bottom());
-      return true;
-    }
-    else if (ball->bottom() >= brick->top() && ball->top() <= brick->top()) {
-      ball->setY(brick->top() - ballD);
-      return true;
-    }
-  }
-  return false;
-}
-
 void Arcanoid::keyPressEvent(QKeyEvent* e) {
 
   switch (e->key()) {
@@ -424,57 +287,11 @@ void Arcanoid::keyReleaseEvent(QKeyEvent * e) {
   }
 }
 
-void Arcanoid::encounter(Ball* a, Ball* b) {
-  int xd = a->distanseX(b);
-  int yd = a->distanseY(b);
-  if (xd <= ballD && yd <= ballD) {
-    a->swapSpeed(b);
-    if (a != stickball && b != stickball)
-      a->split(b);
-    else {
-      a->goUp();
-      b->goUp();
-    }
-  }
-}
-
 void Arcanoid::checkBrick(MovingBrick* brick) {
-  touchedLeft(brick);
-  touchedRight(brick);
-  touchedSimpleBrick(brick);
-  touchedMovingBrick(brick);
-}
-
-void Arcanoid::touchedMovingBrick(MovingBrick* brick) {
-  for (int i = 0; i < movingBricks.size(); i++) {
-    if (brick->getPos() % columns == movingBricks[i]->getPos() % columns)
-      if (bricksTouched(brick, movingBricks[i]))
-        brick->goBack();
-  }
-}
-
-void Arcanoid::touchedSimpleBrick(MovingBrick* brick) {
-  int y = brick->getPos() % columns;
-  for (int i = 0; i < columns; i++) {
-    if (briks[i][y] != NULL) {
-      if (bricksTouched(brick, briks[i][y]))
-        brick->goBack();
-    }
-  }
-}
-
-void Arcanoid::touchedLeft(MovingBrick* brick) {
-  if (brick->left() < 0) {
-    brick->setX(0);
-    brick->goBack();
-  }
-}
-
-void Arcanoid::touchedRight(MovingBrick* brick) {
-  if (brick->right() > width) {
-    brick->setX(width - brickw);
-    brick->goBack();
-  }
+  touched->touchedLeft(brick);
+  touched->touchedRight(brick, this);
+  touched->touchedSimpleBrick(brick, this);
+  touched->touchedMovingBrick(brick, this);
 }
 
 bool Arcanoid::bricksTouched(Brick* a, Brick* b) {

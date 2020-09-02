@@ -47,6 +47,9 @@
     <ClCompile Include="bonus.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="touching.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="arcanoid.qrc" />
@@ -65,6 +68,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="paddle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="touching.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

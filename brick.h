@@ -6,7 +6,7 @@ class Arcanoid;
 class Brick {
 public:
   Brick(int Lives, int X, int Y, int W, int H);
-  ~Brick() {}
+  virtual ~Brick() {}
   virtual void draw(QPainter* qp) = 0;
   void setBonus(Drop b);
   Drop loseLive();
