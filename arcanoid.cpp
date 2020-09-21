@@ -89,10 +89,12 @@ void Arcanoid::drawDno(QPainter* qp) {
 }
 
 Arcanoid::Arcanoid(QWidget* parent) {
+  static const int bottomSpace = 30;
+  static const int numberOfUnbreakable = 4;
   timerId = startTimer(8);
   createBricks();
-  balls.push_back(new Ball(width / 2 - ballD/2, height - 46, ballD));
-  paddle = new Paddle(width / 2 - 60, height - 30, 120, 10, width);
+  balls.push_back(new Ball((width - ballD )/ 2, height - (bottomSpace + ballD), ballD));
+  paddle = new Paddle((width-paddlew) / 2 , height - bottomSpace, paddlew, paddleh, width);
   touched = new Touching();
   stickball = balls[0];
   brickPos = 0;
@@ -100,15 +102,13 @@ Arcanoid::Arcanoid(QWidget* parent) {
   lives = 3;
   points = 0;
   stick = 1;
-  briksleft = columns * rows - 4;
-  repaint();
+  briksleft = columns * rows - numberOfUnbreakable;
 }
 
 void Arcanoid::createBricks() {
   int i, j;
   static const int firstLayer = 2, secondLayer = 4, thirdLayer = 6, fourthLayer = 8;
   static const int WeakBrick = 1, MediumBrick = 2, HardBrick = 3, HardestBrick = 4;
-  static const int leftspace = 2, topspace = 4;
   static const int UnbreakableFirsRow = 2, UnbreakableLastRow = 6, SpeedRow = rows - 1;
   static const int UnbreakableOneX = 5, UnbreakableTwoX = 0, UnbreakableTreeX = 4, UnbreakableFourX = 1;
   static const int SpeedOneX = 5, SpeedTwoX = 0;
@@ -232,25 +232,25 @@ void Arcanoid::bonusPaddle(Ball* ball) {
 void Arcanoid::dropBonus(int i, int j, Drop bonus, Ball* ball) {
   switch (bonus) {
   case Drop::newball:
-    bonuses.push_back(new NewBallBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+    bonuses.push_back(new NewBallBonus(bonus, (leftspace + i) * brickw, (topspace + j) * brickh));
     break;
   case Drop::brick:
-    bonuses.push_back(new BrickBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+    bonuses.push_back(new BrickBonus(bonus, (leftspace + i) * brickw, (topspace + j) * brickh));
     break;
   case Drop::speed:
-    bonuses.push_back(new SpeedBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+    bonuses.push_back(new SpeedBonus(bonus, (leftspace + i) * brickw, (topspace + j) * brickh));
     break;
   case Drop::shrink:
-    bonuses.push_back(new ShrinkBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+    bonuses.push_back(new ShrinkBonus(bonus, (leftspace + i) * brickw, (topspace + j) * brickh));
     break;
   case Drop::expand:
-    bonuses.push_back(new ExpandBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+    bonuses.push_back(new ExpandBonus(bonus, (leftspace + i) * brickw, (topspace + j) * brickh));
     break;
   case Drop::live:
-    bonuses.push_back(new LiveBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+    bonuses.push_back(new LiveBonus(bonus, (leftspace + i) * brickw, (topspace + j) * brickh));
     break;
   case Drop::stick:
-    bonuses.push_back(new StickBonus(bonus, (2 + i) * brickw, (4 + j) * brickh));
+    bonuses.push_back(new StickBonus(bonus, (leftspace + i) * brickw, (topspace + j) * brickh));
     break;
   default:
     break;
@@ -324,7 +324,7 @@ void Arcanoid::CreateMovingBrick() {
     x = 0;
   else
     x = width - brickw;
-  y = 4 + brickPos % columns;
+  y = topspace + brickPos % columns;
   movingBricks.push_back(new MovingBrick(x, y * brickh, brickw, brickh, brickPos));
   brickPos++;
 }

@@ -72,6 +72,8 @@ private:
   const int brickw = 50;
   const int brickh = 20;
   const int ballD = 16;
+  const int paddlew = 120;
   const int paddleh = 10;
+  const int leftspace = 2, topspace = 4;
 };
 
