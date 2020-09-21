@@ -4,31 +4,38 @@
 
 void Arcanoid::paintEvent(QPaintEvent* event) {
   Q_UNUSED(event);
-  char message[30];
+  QString message;
   QPainter painter(this);
   drawField(&painter);
-  setMessage(message, sizeof(message));
-  writeMessage(message, sizeof(message), &painter);
+  setMessage(&message);
+  writeMessage(message, &painter);
 }
 
-void  Arcanoid::setMessage(char* message, int size) {
+void  Arcanoid::setMessage(QString* message) {
   if (lives == 0) {
-    snprintf(message, size, "fail");
+    *message = "fail";
     killTimer(timerId);
   }
   else if (briksleft == 0) {
-    snprintf(message, size, "win");
+    *message = "win";
     killTimer(timerId);
   }
-  else
-    snprintf(message, size, "Points: %d Lives: %d", points, lives);
+  else {
+    QString spoints, slives;
+    spoints.setNum(points);
+    slives.setNum(lives);
+    *message = "Points: ";
+    message->append(spoints);
+    message->append(" Lives: ");
+    message->append(slives);
+  }
 }
 
-void Arcanoid::writeMessage(char* message, int size, QPainter* qp) {
+void Arcanoid::writeMessage(const QString& message,  QPainter* qp) {
   QFont font("Courier", 15, QFont::DemiBold);
   QFontMetrics fm(font);
   qp->setFont(font);
-  int textWidth = fm.width(QString(message));
+  int textWidth = fm.width(message);
   qp->translate(QPoint(textWidth, fm.height()));
   qp->drawText(-textWidth, 0, message);
 }
@@ -99,25 +106,31 @@ Arcanoid::Arcanoid(QWidget* parent) {
 
 void Arcanoid::createBricks() {
   int i, j;
+  static const int firstLayer = 2, secondLayer = 4, thirdLayer = 6, fourthLayer = 8;
+  static const int WeakBrick = 1, MediumBrick = 2, HardBrick = 3, HardestBrick = 4;
+  static const int leftspace = 2, topspace = 4;
+  static const int UnbreakableFirsRow = 2, UnbreakableLastRow = 6, SpeedRow = rows - 1;
+  static const int UnbreakableOneX = 5, UnbreakableTwoX = 0, UnbreakableTreeX = 4, UnbreakableFourX = 1;
+  static const int SpeedOneX = 5, SpeedTwoX = 0;
   for (i = 0; i < columns; i++) {
-    for (j = 0; j < 2; j++) {
-      briks[i][j] = new SimpleBrick(1, brickw * (2 + i), brickh * (4 + j), brickw, brickh);
+    for (j = 0; j < firstLayer; j++) {
+      briks[i][j] = new SimpleBrick(WeakBrick, brickw * (leftspace + i), brickh * (topspace + j), brickw, brickh);
     }
-    for (j = 2; j < 4; j++) {
-      if ((i == 5 || i == 0) && j == 2)
-        briks[i][j] = new UnbreakableBrick(2, brickw * (2 + i), brickh * (4 + j), brickw, brickh);
+    for (j = firstLayer; j < secondLayer; j++) {
+      if ((i == UnbreakableOneX || i == UnbreakableTwoX) && j == UnbreakableFirsRow)
+        briks[i][j] = new UnbreakableBrick(MediumBrick, brickw * (leftspace  + i), brickh * (topspace + j), brickw, brickh);
       else
-        briks[i][j] = new SimpleBrick(2, brickw * (2 + i), brickh * (4 + j), brickw, brickh);
+        briks[i][j] = new SimpleBrick(MediumBrick, brickw * (leftspace + i), brickh * (topspace + j), brickw, brickh);
     }
-    for (j = 4; j < 6; j++)
-      briks[i][j] = new SimpleBrick(3, brickw * (2 + i), brickh * (4 + j), brickw, brickh);
-    for (j = 6; j < rows; j++) {
-      if ((i == 4 || i == 1) && j == 6)
-        briks[i][j] = new UnbreakableBrick(4, brickw * (2 + i), brickh * (4 + j), brickw, brickh);
-      else if ((i == 5 || i == 0) && j == rows - 1)
-        briks[i][j] = new SpeedBrick(2, brickw * (2 + i), brickh * (4 + j), brickw, brickh);
+    for (j = secondLayer; j < thirdLayer; j++)
+      briks[i][j] = new SimpleBrick(HardBrick, brickw * (leftspace + i), brickh * (topspace + j), brickw, brickh);
+    for (j = thirdLayer; j < fourthLayer; j++) {
+      if ((i == UnbreakableTreeX || i == UnbreakableFourX) && j == UnbreakableLastRow)
+        briks[i][j] = new UnbreakableBrick(HardestBrick, brickw * (leftspace + i), brickh * (topspace + j), brickw, brickh);
+      else if ((i == SpeedOneX || i == SpeedTwoX) && j == SpeedRow)
+        briks[i][j] = new SpeedBrick(MediumBrick, brickw * (leftspace + i), brickh * (topspace + j), brickw, brickh);
       else
-        briks[i][j] = new SimpleBrick(4, brickw * (2 + i), brickh * (4 + j), brickw, brickh);
+        briks[i][j] = new SimpleBrick(HardestBrick, brickw * (leftspace + i), brickh * (topspace + j), brickw, brickh);
     }
   }
 }

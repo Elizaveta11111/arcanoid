@@ -31,8 +31,8 @@ protected:
   void keyPressEvent(QKeyEvent*);
   void keyReleaseEvent(QKeyEvent*);
 private:
-  void setMessage(char* message, int size);
-  void writeMessage(char* message, int size, QPainter* qp);
+  void setMessage(QString* message);
+  void writeMessage(const QString& message, QPainter* qp);
   void drawField(QPainter* qp);
   void drawBalls(QPainter* qp);
   void drawBonuses(QPainter* qp);

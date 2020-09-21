@@ -60,9 +60,11 @@ void Touching::touchedPaddle(Ball* ball, Paddle* paddle, Arcanoid* arcanoid) {
 }
 
 void Touching::bounce(Ball* ball, int l, int r, Arcanoid* arcanoid) {
-  if (ball->right() <= l + (r - l) / 3)
+  int leftPaddleEdge = l + (r - l) / 3;
+  int rightPaddleEdge = r - (r - l) / 3;
+  if (ball->right() <= leftPaddleEdge)
     ball->moveLeft();
-  else if (ball->left() >= r - (r - l) / 3)
+  else if (ball->left() >= rightPaddleEdge)
     ball->moveRight();
   else
     ball->changeXdir();
